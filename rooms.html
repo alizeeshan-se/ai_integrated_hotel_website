@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Rooms & Suites — Rorjan Hotel, Mardan</title>
+  <link rel="stylesheet" href="/static/style.css"/>
+  <style>
+    /* ── ROOMS PAGE SPECIFIC ── */
+    .rooms-hero {
+      height: 60vh;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .rooms-hero-bg {
+      position: absolute; inset: 0;
+      background: url('https://images.unsplash.com/photo-1618773928121-c32242e63f39?w=1600&q=80') center/cover;
+    }
+
+    .rooms-hero::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(to bottom, rgba(13,13,13,0.4), rgba(13,13,13,0.85));
+    }
+
+    .rooms-hero .content {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+    }
+
+    .rooms-hero h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2.5rem, 5vw, 4rem);
+      color: var(--white);
+      animation: fadeUp 1s ease both;
+    }
+
+    .rooms-hero p {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.2rem;
+      color: var(--text-dim);
+      margin-top: 0.5rem;
+      animation: fadeUp 1s 0.2s ease both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Filter Bar */
+    .filter-bar {
+      background: var(--dark3);
+      border-bottom: 1px solid var(--border);
+      padding: 1.5rem 4rem;
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .filter-bar span {
+      font-size: 0.7rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+
+    .filter-btn {
+      padding: 0.4rem 1.2rem;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      font-family: 'Jost', sans-serif;
+      font-size: 0.72rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 1px;
+    }
+
+    .filter-btn.active, .filter-btn:hover {
+      border-color: var(--gold);
+      color: var(--gold);
+    }
+
+    /* Room Cards */
+    .rooms-container {
+      padding: 5rem 4rem;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .room-full-card {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      border: 1px solid var(--border);
+      margin-bottom: 3rem;
+      transition: box-shadow 0.3s;
+      background: var(--dark2);
+    }
+
+    .room-full-card:hover {
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+
+    .room-full-card.reverse { direction: rtl; }
+    .room-full-card.reverse > * { direction: ltr; }
+
+    .room-gallery {
+      position: relative;
+      overflow: hidden;
+      height: 380px;
+    }
+
+    .room-gallery img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.7s ease;
+    }
+
+    .room-full-card:hover .room-gallery img { transform: scale(1.06); }
+
+    .room-gallery .room-badge {
+      position: absolute;
+      top: 1.5rem;
+      left: 1.5rem;
+      background: var(--gold);
+      color: var(--dark);
+      padding: 0.3rem 0.9rem;
+      font-size: 0.6rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .room-info {
+      padding: 3rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .room-info h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.7rem;
+      color: var(--cream);
+      margin-bottom: 0.5rem;
+    }
+
+    .room-info .room-price {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+    }
+
+    .room-info .room-price strong {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.6rem;
+      color: var(--gold);
+    }
+
+    .room-desc {
+      font-size: 0.85rem;
+      line-height: 1.9;
+      color: var(--text-dim);
+      margin: 1.5rem 0;
+    }
+
+    .amenities {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .amenity {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.78rem;
+      color: var(--text);
+    }
+
+    .amenity .icon { color: var(--gold); font-size: 0.85rem; }
+
+    .room-actions {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    /* BOOKING FORM MODAL */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 5000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+      backdrop-filter: blur(8px);
+    }
+
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .modal {
+      background: var(--dark2);
+      border: 1px solid var(--border);
+      padding: 3rem;
+      width: 90%;
+      max-width: 480px;
+      position: relative;
+      animation: modalIn 0.4s ease;
+    }
+
+    @keyframes modalIn {
+      from { transform: translateY(30px) scale(0.97); }
+      to { transform: translateY(0) scale(1); }
+    }
+
+    .modal h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.6rem;
+      color: var(--cream);
+      margin-bottom: 0.3rem;
+    }
+
+    .modal .sub { font-size: 0.78rem; color: var(--text-dim); margin-bottom: 2rem; }
+
+    .form-group {
+      margin-bottom: 1.2rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.65rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 0.5rem;
+    }
+
+    .form-group input, .form-group select {
+      width: 100%;
+      background: var(--dark);
+      border: 1px solid var(--border);
+      color: var(--cream);
+      padding: 0.7rem 1rem;
+      font-family: 'Jost', sans-serif;
+      font-size: 0.85rem;
+      outline: none;
+      transition: border-color 0.3s;
+    }
+
+    .form-group input:focus, .form-group select:focus { border-color: var(--gold); }
+    .form-group select option { background: var(--dark2); }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+    .close-modal {
+      position: absolute;
+      top: 1rem; right: 1.5rem;
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+
+    .close-modal:hover { color: var(--gold); }
+
+    #booking-success {
+      display: none;
+      text-align: center;
+      padding: 2rem 0;
+    }
+
+    #booking-success .check { font-size: 3rem; margin-bottom: 1rem; }
+    #booking-success h4 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.4rem;
+      color: var(--cream);
+    }
+
+    #booking-success .ref {
+      font-family: 'Jost', sans-serif;
+      font-size: 1.2rem;
+      color: var(--gold);
+      margin: 0.8rem 0;
+      letter-spacing: 3px;
+    }
+
+    #booking-success p { font-size: 0.82rem; color: var(--text-dim); line-height: 1.7; }
+
+    /* Washroom/facilities section */
+    .facilities-section {
+      padding: 5rem 4rem;
+      background: var(--dark2);
+      border-top: 1px solid var(--border);
+    }
+
+    .facilities-section .section-header {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .facilities-section h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      color: var(--cream);
+    }
+
+    .facilities-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .facility-card {
+      position: relative;
+      overflow: hidden;
+      aspect-ratio: 3/4;
+    }
+
+    .facility-card img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      transition: transform 0.5s ease;
+    }
+
+    .facility-card:hover img { transform: scale(1.08); }
+
+    .facility-card .overlay {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      background: linear-gradient(to top, rgba(13,13,13,0.9), transparent);
+      padding: 1.5rem 1rem 1rem;
+    }
+
+    .facility-card .overlay h4 {
+      font-family: 'Playfair Display', serif;
+      font-size: 0.95rem;
+      color: var(--cream);
+    }
+
+    .facility-card .overlay p {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+    }
+
+    @media (max-width: 900px) {
+      .room-full-card { grid-template-columns: 1fr; }
+      .room-full-card.reverse { direction: ltr; }
+      .room-gallery { height: 260px; }
+      .rooms-container { padding: 3rem 1.5rem; }
+      .filter-bar { padding: 1rem 1.5rem; }
+      .facilities-grid { grid-template-columns: 1fr 1fr; }
+      .facilities-section { padding: 3rem 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav>
+  <div class="nav-logo">
+    <span class="brand">RORJAN</span>
+    <span class="sub">Restaurant & Hotel · Mardan</span>
+  </div>
+  <ul class="nav-links">
+    <li><a href="/">Home</a></li>
+    <li><a href="/rooms" class="active">Rooms</a></li>
+    <li><a href="/contact">Contact</a></li>
+  </ul>
+  <a href="/rooms" class="nav-cta">Book Now</a>
+</nav>
+
+<!-- HERO -->
+<div class="rooms-hero">
+  <div class="rooms-hero-bg"></div>
+  <div class="content">
+    <p class="section-label">Accommodations</p>
+    <div class="gold-line"></div>
+    <h1>Rooms & Suites</h1>
+    <p>Where comfort meets timeless elegance</p>
+  </div>
+</div>
+
+<!-- FILTER BAR -->
+<div class="filter-bar">
+  <span>Filter:</span>
+  <button class="filter-btn active" onclick="filterRooms('all', this)">All Rooms</button>
+  <button class="filter-btn" onclick="filterRooms('deluxe', this)">Deluxe</button>
+  <button class="filter-btn" onclick="filterRooms('suite', this)">Suites</button>
+  <button class="filter-btn" onclick="filterRooms('family', this)">Family</button>
+</div>
+
+<!-- ROOMS -->
+<div class="rooms-container">
+
+  <!-- Deluxe Room -->
+  <div class="room-full-card" data-type="deluxe">
+    <div class="room-gallery">
+      <span class="room-badge">Most Popular</span>
+      <img src="https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=900&q=85" alt="Deluxe Room"/>
+    </div>
+    <div class="room-info">
+      <div>
+        <h2>Deluxe Room</h2>
+        <div class="room-price">From <strong>PKR 5,000</strong> / night</div>
+        <p class="room-desc">Our Deluxe Rooms offer a perfect blend of comfort and elegance. Featuring a plush queen-size bed, modern furnishings, and warm Pashtun-inspired decor, this is the ideal retreat after a day of exploring Mardan.</p>
+        <div class="amenities">
+          <div class="amenity"><span class="icon">❄️</span> Air Conditioning</div>
+          <div class="amenity"><span class="icon">📺</span> Smart TV</div>
+          <div class="amenity"><span class="icon">📶</span> Free WiFi</div>
+          <div class="amenity"><span class="icon">🚿</span> Attached Bathroom</div>
+          <div class="amenity"><span class="icon">☕</span> Tea/Coffee Maker</div>
+          <div class="amenity"><span class="icon">🏔️</span> City View</div>
+        </div>
+      </div>
+      <div class="room-actions">
+        <button class="btn-gold" onclick="openBooking('Deluxe Room', 5000)">Book This Room</button>
+        <button class="btn-outline" onclick="quickAction('Tell me about the Deluxe Room at Rorjan Hotel'); toggleChat();">Ask Zara</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Premium Suite -->
+  <div class="room-full-card reverse" data-type="suite">
+    <div class="room-gallery">
+      <span class="room-badge">Best Value</span>
+      <img src="https://images.unsplash.com/photo-1591088398332-8a7791972843?w=900&q=85" alt="Premium Suite"/>
+    </div>
+    <div class="room-info">
+      <div>
+        <h2>Premium Suite</h2>
+        <div class="room-price">From <strong>PKR 9,500</strong> / night</div>
+        <p class="room-desc">Elevate your stay in our Premium Suite featuring a king-size bed, a separate lounge area, minibar, and stunning mountain views. Perfect for those seeking a more indulgent experience with space to relax and unwind.</p>
+        <div class="amenities">
+          <div class="amenity"><span class="icon">👑</span> King Size Bed</div>
+          <div class="amenity"><span class="icon">🛋️</span> Separate Lounge</div>
+          <div class="amenity"><span class="icon">🍾</span> Minibar</div>
+          <div class="amenity"><span class="icon">🏔️</span> Mountain View</div>
+          <div class="amenity"><span class="icon">🛁</span> Premium Bath</div>
+          <div class="amenity"><span class="icon">🍽️</span> Room Service</div>
+        </div>
+      </div>
+      <div class="room-actions">
+        <button class="btn-gold" onclick="openBooking('Premium Suite', 9500)">Book This Suite</button>
+        <button class="btn-outline" onclick="quickAction('Tell me about the Premium Suite at Rorjan Hotel'); toggleChat();">Ask Zara</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Executive Suite -->
+  <div class="room-full-card" data-type="suite">
+    <div class="room-gallery">
+      <span class="room-badge">Luxury</span>
+      <img src="https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=900&q=85" alt="Executive Suite"/>
+    </div>
+    <div class="room-info">
+      <div>
+        <h2>Executive Suite</h2>
+        <div class="room-price">From <strong>PKR 15,000</strong> / night</div>
+        <p class="room-desc">Our crown jewel — the Executive Suite is a world unto itself. Featuring a spacious full living room, private kitchenette, premium bath amenities, and panoramic views, this is the pinnacle of luxury in Mardan.</p>
+        <div class="amenities">
+          <div class="amenity"><span class="icon">🏠</span> Full Living Room</div>
+          <div class="amenity"><span class="icon">🍳</span> Kitchenette</div>
+          <div class="amenity"><span class="icon">🌟</span> Butler Service</div>
+          <div class="amenity"><span class="icon">🛁</span> Jacuzzi Bath</div>
+          <div class="amenity"><span class="icon">🖥️</span> Work Desk</div>
+          <div class="amenity"><span class="icon">🌄</span> Panoramic View</div>
+        </div>
+      </div>
+      <div class="room-actions">
+        <button class="btn-gold" onclick="openBooking('Executive Suite', 15000)">Book This Suite</button>
+        <button class="btn-outline" onclick="quickAction('Tell me about the Executive Suite at Rorjan Hotel'); toggleChat();">Ask Zara</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Family Room -->
+  <div class="room-full-card reverse" data-type="family">
+    <div class="room-gallery">
+      <span class="room-badge">Family</span>
+      <img src="https://images.unsplash.com/photo-1566195992011-5f6b21e539aa?w=900&q=85" alt="Family Room"/>
+    </div>
+    <div class="room-info">
+      <div>
+        <h2>Family Room</h2>
+        <div class="room-price">From <strong>PKR 7,500</strong> / night</div>
+        <p class="room-desc">Designed with families in mind, our Family Room features two queen-size beds, ample storage, and a warm, welcoming atmosphere. Comfortably accommodates up to 6 guests — ideal for family trips to Mardan.</p>
+        <div class="amenities">
+          <div class="amenity"><span class="icon">🛏️</span> 2 Queen Beds</div>
+          <div class="amenity"><span class="icon">👨‍👩‍👧‍👦</span> Sleeps 4–6</div>
+          <div class="amenity"><span class="icon">📺</span> Smart TV</div>
+          <div class="amenity"><span class="icon">🚿</span> Attached Bath</div>
+          <div class="amenity"><span class="icon">❄️</span> Air Conditioning</div>
+          <div class="amenity"><span class="icon">📶</span> Free WiFi</div>
+        </div>
+      </div>
+      <div class="room-actions">
+        <button class="btn-gold" onclick="openBooking('Family Room', 7500)">Book This Room</button>
+        <button class="btn-outline" onclick="quickAction('Tell me about the Family Room at Rorjan Hotel'); toggleChat();">Ask Zara</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- FACILITIES -->
+<section class="facilities-section">
+  <div class="section-header">
+    <p class="section-label">Hotel Facilities</p>
+    <div class="gold-line"></div>
+    <h2>World-Class Amenities</h2>
+  </div>
+  <div class="facilities-grid">
+    <div class="facility-card">
+      <img src="https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?w=400&q=80" alt="Bathroom"/>
+      <div class="overlay">
+        <h4>Luxury Bathrooms</h4>
+        <p>Premium fittings & toiletries</p>
+      </div>
+    </div>
+    <div class="facility-card">
+      <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400&q=80" alt="Restaurant"/>
+      <div class="overlay">
+        <h4>In-House Restaurant</h4>
+        <p>Authentic Peshawari cuisine</p>
+      </div>
+    </div>
+    <div class="facility-card">
+      <img src="https://images.unsplash.com/photo-1603512500383-3c6e7d5a7f90?w=400&q=80" alt="Lobby"/>
+      <div class="overlay">
+        <h4>Grand Lobby</h4>
+        <p>Elegant welcome experience</p>
+      </div>
+    </div>
+    <div class="facility-card">
+      <img src="https://images.unsplash.com/photo-1540541338287-41700207dee6?w=400&q=80" alt="Hotel Exterior"/>
+      <div class="overlay">
+        <h4>Scenic Views</h4>
+        <p>KPK mountain panoramas</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <div class="brand">RORJAN</div>
+      <p>A sanctuary of authentic Pashtun hospitality in the heart of Mardan, KPK. Where every guest is treated as family.</p>
+    </div>
+    <div>
+      <h5>Navigate</h5>
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="/rooms">Rooms & Suites</a></li>
+        <li><a href="/contact">Contact Us</a></li>
+      </ul>
+    </div>
+    <div>
+      <h5>Services</h5>
+      <ul>
+        <li><a href="#" onclick="quickAction('I want to book a room'); toggleChat(); return false;">Room Booking</a></li>
+        <li><a href="#" onclick="quickAction('I want to order food'); toggleChat(); return false;">Restaurant</a></li>
+        <li><a href="#" onclick="quickAction('I have a complaint'); toggleChat(); return false;">Guest Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-contact">
+      <h5>Find Us</h5>
+      <p>📍 Mardan, KPK, Pakistan</p>
+      <p>📞 <a href="tel:+923499373126">+92 349 9373126</a></p>
+      <p>✉ <a href="mailto:alizeeshanse@gmail.com">alizeeshanse@gmail.com</a></p>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2024 Rorjan Restaurant & Hotel. All Rights Reserved.</p>
+    <p>Mardan, KPK, Pakistan</p>
+  </div>
+</footer>
+
+<!-- BOOKING MODAL -->
+<div class="modal-overlay" id="bookingModal">
+  <div class="modal">
+    <button class="close-modal" onclick="closeBooking()">✕</button>
+    <div id="booking-form-content">
+      <h3>Reserve Your Room</h3>
+      <p class="sub" id="modal-room-title">Deluxe Room — PKR 5,000 / night</p>
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" id="b-name" placeholder="Your full name"/>
+      </div>
+      <div class="form-group">
+        <label>Phone Number</label>
+        <input type="tel" id="b-phone" placeholder="+92 3XX XXXXXXX"/>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Check-in Date</label>
+          <input type="date" id="b-checkin"/>
+        </div>
+        <div class="form-group">
+          <label>Check-out Date</label>
+          <input type="date" id="b-checkout"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Guests</label>
+          <select id="b-guests">
+            <option>1 Guest</option>
+            <option>2 Guests</option>
+            <option>3 Guests</option>
+            <option>4 Guests</option>
+            <option>5+ Guests</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Room Type</label>
+          <select id="b-room">
+            <option>Deluxe Room</option>
+            <option>Premium Suite</option>
+            <option>Executive Suite</option>
+            <option>Family Room</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Special Requests</label>
+        <input type="text" id="b-special" placeholder="Any special requirements?"/>
+      </div>
+      <button class="btn-gold" style="width:100%;margin-top:0.5rem;" onclick="submitBooking()">Confirm Booking</button>
+    </div>
+    <div id="booking-success">
+      <div class="check">✅</div>
+      <h4>Booking Confirmed!</h4>
+      <div class="ref" id="booking-ref">RRH-0000</div>
+      <p>Your reservation has been received. Our team will contact you within 30 minutes to confirm. Thank you for choosing Rorjan!</p>
+      <button class="btn-outline" style="margin-top:1.5rem;" onclick="closeBooking()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- AI AGENT WIDGET -->
+<button id="ai-agent-btn" title="Chat with Zara" ;onclick="quickAction('what zara offers'); onclick="toggleChat()">
+  <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
+</button>
+
+<div id="ai-chat-panel">
+  <div class="chat-header">
+    <div class="agent-avatar">🌟</div>
+    <div class="agent-info">
+      <h4>Zara — AI Concierge</h4>
+      <span>● Online Now</span>
+    </div>
+    <button class="close-btn">✕</button>
+  </div>
+  <div class="quick-actions">
+    <button class="quick-btn" onclick="quickAction('I want to book a room')">🛏 Book Room</button>
+    <button class="quick-btn" onclick="quickAction('I want to order food')">🍽 Order Food</button>
+    <button class="quick-btn" onclick="quickAction('I have a complaint')">📢 Complaint</button>
+    <button class="quick-btn" onclick="quickAction('I want to leave a review')">⭐ Review</button>
+    <button class="quick-btn" onclick="quickAction('What are local attractions in Mardan?')">🗺 Explore</button>
+  </div>
+  <div class="chat-messages" id="chat-messages"></div>
+  <div class="chat-input-area">
+    <input type="text" id="chat-input" placeholder="Ask Zara anything..." autocomplete="off"/>
+    <button class="send-btn">
+      <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+    </button>
+  </div>
+</div>
+
+<script src="/static/agent.js"></script>
+<script>
+  // Filter rooms
+  function filterRooms(type, btn) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.room-full-card').forEach(card => {
+      if (type === 'all' || card.dataset.type === type) {
+        card.style.display = 'grid';
+      } else {
+        card.style.display = 'none';
+      }
+    });
+  }
+
+  // Booking modal
+  let currentRoom = '', currentPrice = 0;
+
+  function openBooking(room, price) {
+    currentRoom = room;
+    currentPrice = price;
+    document.getElementById('modal-room-title').textContent = `${room} — PKR ${price.toLocaleString()} / night`;
+    document.getElementById('b-room').value = room;
+    document.getElementById('booking-form-content').style.display = 'block';
+    document.getElementById('booking-success').style.display = 'none';
+    document.getElementById('bookingModal').classList.add('open');
+  }
+
+  function closeBooking() {
+    document.getElementById('bookingModal').classList.remove('open');
+  }
+
+  async function submitBooking() {
+    const name = document.getElementById('b-name').value.trim();
+    const phone = document.getElementById('b-phone').value.trim();
+    const checkin = document.getElementById('b-checkin').value;
+    const checkout = document.getElementById('b-checkout').value;
+
+    if (!name || !phone || !checkin || !checkout) {
+      alert('Please fill all required fields.');
+      return;
+    }
+
+    const ref = 'RRH-' + Math.floor(1000 + Math.random() * 9000);
+    document.getElementById('booking-ref').textContent = ref;
+
+    // Save to backend
+    try {
+      await fetch('/api/booking', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ref, name, phone, checkin, checkout,
+          room: document.getElementById('b-room').value,
+          guests: document.getElementById('b-guests').value,
+          special: document.getElementById('b-special').value,
+          timestamp: new Date().toISOString()
+        })
+      });
+    } catch(e) {}
+
+    document.getElementById('booking-form-content').style.display = 'none';
+    document.getElementById('booking-success').style.display = 'block';
+  }
+
+  // Close modal on overlay click
+  document.getElementById('bookingModal').addEventListener('click', function(e) {
+    if (e.target === this) closeBooking();
+  });
+
+  // Set min date for booking
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('b-checkin').min = today;
+  document.getElementById('b-checkout').min = today;
+</script>
+</body>
+</html>
